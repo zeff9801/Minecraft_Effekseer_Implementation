@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.RenderState;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModList;
@@ -34,8 +35,8 @@ public class MEI {
 			LoaderIndependentIdentifier.rlConstructor2.set(ResourceLocation::new);
 		}
 		if (Effek.widthGetter.get() == null) {
-			Effek.widthGetter.set(() -> Minecraft.getInstance().getMainWindow().getWidth());
-			Effek.heightGetter.set(() -> Minecraft.getInstance().getMainWindow().getHeight());
+			Effek.widthGetter.set(() -> Minecraft.getInstance().getWindow().getWidth());
+			Effek.heightGetter.set(() -> Minecraft.getInstance().getWindow().getHeight());
 		}
 		if (ModDetectionUtil.detector.get() == null) ModDetectionUtil.detector.set((name) -> ModList.get().isLoaded(name));
 		
@@ -43,16 +44,22 @@ public class MEI {
 		MinecraftForge.EVENT_BUS.addListener(this::onServerStartup);
 		if (!FMLEnvironment.dist.isClient()) return;
 		MinecraftForge.EVENT_BUS.addListener(this::renderWorldLast);
+		MinecraftForge.EVENT_BUS.addListener(this::fovEvent);
 		IReloadableResourceManager manager = (IReloadableResourceManager) Minecraft.getInstance().getResourceManager();
-		manager.addReloadListener(EffekseerMCAssetLoader.INSTANCE);
+		manager.registerReloadListener(EffekseerMCAssetLoader.INSTANCE);
 	}
 	
 	private void onServerStartup(FMLServerAboutToStartEvent event) {
-		event.getServer().getCommandManager().getDispatcher().register(Command.construct());
+		event.getServer().getCommands().getDispatcher().register(Command.construct());
 	}
 	
 	private static long lastFrame = -1;
-	
+
+	private double fov = 70;
+
+	private void fovEvent(EntityViewRenderEvent.FOVModifier event) {
+		fov = event.getFOV();
+	}
 	private void renderWorldLast(RenderWorldLastEvent event) {
 		mapHandler.setTimeSinceReload(Effeks.getTimeSinceReload() + 1);
 //		Effek effek = Effeks.get("mc_effekseer_impl:example");
@@ -92,24 +99,25 @@ public class MEI {
 		}
 		lastFrame = System.currentTimeMillis();
 		Matrix4f matrix;
-		event.getMatrixStack().push();
+		event.getMatrixStack().pushPose();
 		event.getMatrixStack().translate(
-				-Minecraft.getInstance().getRenderManager().info.getProjectedView().getX(),
-				-Minecraft.getInstance().getRenderManager().info.getProjectedView().getY(),
-				-Minecraft.getInstance().getRenderManager().info.getProjectedView().getZ()
+				-Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().x,
+				-Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().y,
+				-Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().z
 		);
+
 		event.getMatrixStack().translate(0.5f, 0.5f, 0.5f);
-		matrix = event.getMatrixStack().getLast().getMatrix();
+		matrix = event.getMatrixStack().last().pose();
 		float[][] cameraMatrix = matrixToArray(matrix);
-		event.getMatrixStack().pop();
+		event.getMatrixStack().popPose();
 		matrix = Minecraft.getInstance().gameRenderer.getProjectionMatrix(
-				Minecraft.getInstance().getRenderManager().info,
+				Minecraft.getInstance().gameRenderer.getMainCamera(),
 				event.getPartialTicks(), true
 		);
 		float[][] projectionMatrix = matrixToArray(matrix);
 		final float finalDiff = diff;
-		if (Minecraft.getInstance().worldRenderer.getParticleFrameBuffer() != null)
-			Minecraft.getInstance().worldRenderer.getParticleFrameBuffer().func_237506_a_(Minecraft.getInstance().getFramebuffer());
+		if (Minecraft.getInstance().levelRenderer.getParticlesTarget() != null)
+			Minecraft.getInstance().levelRenderer.getParticlesTarget().copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
 		RenderState.PARTICLES_TARGET.setupRenderState();
 		Effeks.forEach((name, effect) -> effect.draw(cameraMatrix, projectionMatrix, finalDiff));
 		RenderState.PARTICLES_TARGET.clearRenderState();

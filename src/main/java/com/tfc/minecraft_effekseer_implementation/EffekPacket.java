@@ -6,8 +6,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3d;
 
-import java.io.IOException;
-
 //I will implement IPacket, and you cannot stop me.
 public class EffekPacket implements IPacket {
 	public final ResourceLocation effekName;
@@ -21,8 +19,8 @@ public class EffekPacket implements IPacket {
 		this.position = position;
 		this.emmiterName = emmiterName;
 	}
-	
-	public static EffekPacket read(PacketBuffer buffer) {
+
+	public static EffekPacket readPacket(PacketBuffer buffer) {
 		return new EffekPacket(
 				buffer.readResourceLocation(),
 				buffer.readFloat(),
@@ -30,14 +28,14 @@ public class EffekPacket implements IPacket {
 				buffer.readResourceLocation()
 		);
 	}
-	
+
 	@Override
-	public void readPacketData(PacketBuffer buf) {
+	public void read(PacketBuffer buf) {
 		// nothing to do, as this method goes unused
 	}
 	
 	@Override
-	public void writePacketData(PacketBuffer buf) {
+	public void write(PacketBuffer buf) {
 		buf.writeResourceLocation(effekName);
 		buf.writeFloat(progress);
 		buf.writeDouble(position.x);
@@ -47,7 +45,7 @@ public class EffekPacket implements IPacket {
 	}
 	
 	@Override
-	public void processPacket(INetHandler handler) {
+	public void handle(INetHandler handler) {
 		// nothing to do
 	}
 }

@@ -2,34 +2,26 @@ package com.tfc.effekseer4j.enums;
 
 import Effekseer.swig.EffekseerCoreDeviceType;
 
-@SuppressWarnings({"unused", "RedundantSuppression"})
 public enum DeviceType {
 	UNKNOWN(EffekseerCoreDeviceType.Unknown),
 	OPENGL(EffekseerCoreDeviceType.OpenGL);
-	
-	EffekseerCoreDeviceType type;
-	
-	DeviceType(EffekseerCoreDeviceType type) {
-		this.type = type;
+
+	public int getNativeOrdinal() {
+		return impl.swigValue();
 	}
-	
-	@Override
-	public String toString() {
-		return type.toString();
-	}
-	
-	public int ord() {
-		return type.swigValue();
-	}
-	
-	public static DeviceType fromOrd(int ord) {
-		for (DeviceType value : DeviceType.values())
-			if (value.ord() == ord)
+
+	public static DeviceType fromNativeOrdinal(int ord) {
+		for (DeviceType value : values()){
+			if (value.getNativeOrdinal() == ord) {
 				return value;
-		return null;
+			}
+		}
+		throw new IllegalArgumentException("DeviceType.fromNativeOrdinal: ord = " + ord);
 	}
-	
-	public EffekseerCoreDeviceType unwrap() {
-		return type;
+
+	DeviceType(EffekseerCoreDeviceType impl) {
+		this.impl = impl;
 	}
+
+	private final EffekseerCoreDeviceType impl;
 }

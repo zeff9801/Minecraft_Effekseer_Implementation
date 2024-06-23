@@ -10,7 +10,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class Command {
 	public static LiteralArgumentBuilder<CommandSource> construct() {
-		return Commands.literal("effek").requires(commandSource -> commandSource.hasPermissionLevel(2))
+		return Commands.literal("effek").requires(commandSource -> commandSource.hasPermission(2))
 				.then(Commands.argument("effek", StringArgumentType.string())
 						.then(Commands.argument("emitter", StringArgumentType.string())
 								.then(Commands.literal("true").executes((source) -> handle(source, source.getSource(), true)))
@@ -20,17 +20,17 @@ public class Command {
 	private static int handle(CommandContext<?> context, CommandSource source, boolean delete) {
 		if (!delete) {
 			Networking.sendEndEffekPacket(
-					PacketDistributor.DIMENSION.with(() -> source.getWorld().getDimensionKey()),
+					PacketDistributor.DIMENSION.with(() -> source.getLevel().dimension()),
 					new ResourceLocation(StringArgumentType.getString(context, "effek")),
 					new ResourceLocation(StringArgumentType.getString(context, "emitter")),
 					true
 			);
 		} else {
 			Networking.sendStartEffekPacket(
-					PacketDistributor.DIMENSION.with(() -> source.getWorld().getDimensionKey()),
+					PacketDistributor.DIMENSION.with(() -> source.getLevel().dimension()),
 					new ResourceLocation(StringArgumentType.getString(context, "effek")),
 					new ResourceLocation(StringArgumentType.getString(context, "emitter")),
-					0, source.getPos()
+					0, source.getPosition()
 			);
 		}
 		return 0;

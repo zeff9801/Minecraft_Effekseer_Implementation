@@ -1,5 +1,6 @@
 package com.tfc.minecraft_effekseer_implementation.loader;
 
+import Effekseer.swig.EffekseerBackendCore;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,15 +46,16 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 	public static void addReloadListener(String effekName, Consumer<Effek> effekConsumer) {
 		effekConsumers.put(effekName, effekConsumer);
 	}
-	
+
 	@Override
 	protected void apply(Effek objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn) {
-		if (Effekseer.getDevice() != DeviceType.OPENGL) {
-			LOGGER.info("Initializing Effekseer Library");
-			Effekseer.init();
-			if (Effekseer.setupForOpenGL()) LOGGER.info("Successfully initalized Effekseer for OpenGL");
-			else LOGGER.warn("Something went wrong while setting up Effekseer");
+		String s = Paths.get("bin/effekseer/EffekseerNativeForJava.dll").toAbsolutePath().toString();
+		try {
+			System.load(s);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
 		LOGGER.debug("Offloading effeks:");
 		mapHandler.markUnsafe(true);
 		ArrayList<Effek> effeks = new ArrayList<>();
@@ -63,7 +66,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 			LOGGER.debug(" Offloaded effek " + effek.getId());
 		}
 		LOGGER.debug("Done offloading effeks");
-		Collection<ResourceLocation> locations = resourceManagerIn.getAllResourceLocations("effeks", (path) -> path.endsWith(".efk.json"));
+		Collection<ResourceLocation> locations = resourceManagerIn.listResources("effeks", (path) -> path.endsWith(".efk.json"));
 		LOGGER.info("Loading Effekseer assets");
 		for (ResourceLocation location : locations) {
 			try {
@@ -77,7 +80,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 				EffekseerEffect effect = new EffekseerEffect();
 				JsonObject object = gson.fromJson(new String(bytes), JsonObject.class);
 				if (!object.has("effect")) {
-					LOGGER.warn("Cannot load effek " + location.toString() + " because the \"effect\" entry is missing from the json.");
+					LOGGER.warn("Cannot load effek " + location + " because the \"effect\" entry is missing from the json.");
 					continue;
 				}
 				// load effect
@@ -87,12 +90,12 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 				ResourceLocation location1 = new ResourceLocation(namespace + ":effeks/" + path);
 				stream = getStream(resourceManagerIn, location1);
 				if (stream == null) {
-					LOGGER.warn("Effek \"" + location.toString() + "\" failed to load, \"" + location1.toString() + "\" could not be found.");
+					LOGGER.warn("Effek \"" + location + "\" failed to load, \"" + location1.toString() + "\" could not be found.");
 					continue;
 				}
 				byte[] bytes1 = readFully(stream);
 				if (!effect.load(bytes1, bytes1.length, 1)) {
-					LOGGER.warn("Effek " + location1.toString() + " failed to load, no further info known.");
+					LOGGER.warn("Effek " + location1 + " failed to load, no further info known.");
 					continue;
 				}
 				{ // textures
@@ -107,7 +110,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 							texturePath = namespace + ":effeks/" + path;
 							stream = getStream(resourceManagerIn, new ResourceLocation(texturePath));
 							if (stream == null) {
-								LOGGER.warn("Effek \"" + location.toString() + "\" failed to load, texture \"" + texturePath + "\" is missing.");
+								LOGGER.warn("Effek \"" + location + "\" failed to load, texture \"" + texturePath + "\" is missing.");
 								continue;
 							}
 							bytes1 = readFully(stream);
@@ -127,7 +130,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 						texturePath = namespace + ":effeks/" + path;
 						stream = getStream(resourceManagerIn, new ResourceLocation(texturePath));
 						if (stream == null) {
-							LOGGER.warn("Effek \"" + location.toString() + "\" failed to load, model \"" + texturePath + "\" is missing.");
+							LOGGER.warn("Effek \"" + location + "\" failed to load, model \"" + texturePath + "\" is missing.");
 							continue;
 						}
 						bytes1 = readFully(stream);
@@ -146,7 +149,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 						texturePath = namespace + ":effeks/" + path;
 						stream = getStream(resourceManagerIn, new ResourceLocation(texturePath));
 						if (stream == null) {
-							LOGGER.warn("Effek \"" + location.toString() + "\" failed to load, curve \"" + texturePath + "\" is missing.");
+							LOGGER.warn("Effek \"" + location + "\" failed to load, curve \"" + texturePath + "\" is missing.");
 							continue;
 						}
 						bytes1 = readFully(stream);
@@ -165,7 +168,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 						texturePath = namespace + ":effeks/" + path;
 						stream = getStream(resourceManagerIn, new ResourceLocation(texturePath));
 						if (stream == null) {
-							LOGGER.warn("Effek \"" + location.toString() + "\" failed to load, material \"" + texturePath + "\" is missing.");
+							LOGGER.warn("Effek \"" + location + "\" failed to load, material \"" + texturePath + "\" is missing.");
 							continue;
 						}
 						bytes1 = readFully(stream);
@@ -176,7 +179,7 @@ public class EffekseerMCAssetLoader extends ReloadListener<Effek> {
 				}
 				location = new ResourceLocation(location.getNamespace() + ":" + location.getPath().substring("effeks/".length(), location.getPath().length() - ".efk.json".length()));
 				// register Effek
-				LOGGER.debug("Successfully loaded effek " + location.toString());
+				LOGGER.debug("Successfully loaded effek " + location);
 				Effek effek = new Effek(
 						new LoaderIndependentIdentifier(location.toString()),
 						(manager) -> new EffekEmitter(manager.createParticle(effect)),

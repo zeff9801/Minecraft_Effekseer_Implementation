@@ -7,40 +7,41 @@ import java.util.Objects;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class Effekseer {
-	
+
 	private final EffekseerBackendCore core;
-	
+
 	public Effekseer() {
 		core = new EffekseerBackendCore();
 	}
-	
+
+
 	public void delete() {
 		core.delete();
 	}
-	
-	public static DeviceType getDevice() {
-		return DeviceType.fromOrd(EffekseerBackendCore.GetDevice().swigValue());
+
+	public static DeviceType getDeviceType() {
+		return DeviceType.fromNativeOrdinal(EffekseerBackendCore.GetDevice().swigValue());
 	}
-	
+
 	public static boolean setupForOpenGL() {
 		return EffekseerBackendCore.InitializeWithOpenGL();
 	}
-	
+
 	public static void finish() {
 		EffekseerBackendCore.Terminate();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Effekseer)) return false;
 		return EffekseerBackendCore.getCPtr(core) == EffekseerBackendCore.getCPtr(((Effekseer) obj).core);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(core);
 	}
-	
+
 	public EffekseerBackendCore unwrap() {
 		return core;
 	}

@@ -30,7 +30,7 @@ public class Networking {
 	static {
 		channel.registerMessage(
 				0, EffekPacket.class,
-				EffekPacket::writePacketData, EffekPacket::read,
+				EffekPacket::write, EffekPacket::readPacket,
 				(packet, context) -> {
 					Effek effek = Effeks.get(packet.effekName.toString());
 					if (effek != null) {
@@ -38,14 +38,14 @@ public class Networking {
 						emitter.setVisible(true);
 						emitter.setPaused(false);
 						emitter.setPlayProgress(packet.progress);
-						emitter.setPosition(packet.position.getX(), packet.position.getY(), packet.position.getZ());
+						emitter.setPosition(packet.position.x(), packet.position.y(), packet.position.z());
 					}
 					context.get().setPacketHandled(true);
 				}
 		);
 		channel.registerMessage(
 				1, EndEmitterPacket.class,
-				EndEmitterPacket::writePacketData, EndEmitterPacket::new,
+				EndEmitterPacket::write, EndEmitterPacket::new,
 				(packet, context) -> {
 					Effek effek = Effeks.get(packet.effekName.toString());
 					if (effek != null) effek.delete(effek.getOrCreate(packet.emitterName.toString()));
@@ -63,7 +63,7 @@ public class Networking {
 			ResourceLocation effekName, ResourceLocation emitterName, float progress, Vector3d position
 	) {
 		EffekPacket packet = new EffekPacket(effekName, progress, position, emitterName);
-		for (PlayerEntity player : world.getPlayers()) {
+		for (PlayerEntity player : world.players()) {
 			if (selector.test(player) && player instanceof ServerPlayerEntity) {
 				channel.send(
 						PacketDistributor.PLAYER.with(() -> ((ServerPlayerEntity) player)),

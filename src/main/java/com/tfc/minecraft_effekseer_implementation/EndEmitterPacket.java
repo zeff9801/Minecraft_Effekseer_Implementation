@@ -25,17 +25,17 @@ public class EndEmitterPacket implements IPacket {
 	}
 	
 	@Override
-	public void readPacketData(PacketBuffer buf) {
+	public void read(PacketBuffer buf) {
 	}
 	
 	@Override
-	public void writePacketData(PacketBuffer buf) {
+	public void write(PacketBuffer buf) {
 		buf.writeResourceLocation(effekName);
 		buf.writeResourceLocation(emitterName);
 		buf.writeBoolean(deleteEmitter);
 	}
 	
 	@Override
-	public void processPacket(INetHandler handler) {
+	public void handle(INetHandler handler) {
 	}
 }
