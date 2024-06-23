@@ -27,7 +27,7 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'snapshot', version: '20210309-1.16.5'
+    mappings channel: 'official', version: '1.16.5'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
      accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -99,10 +99,10 @@ dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
-    minecraft 'net.minecraftforge:forge:1.16.5-36.1.16'
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.42'
 
 //    implementation fg.deobf('libs/OptiFine_1.16.5_HD_U_G7.jar')
-    extraLibs files('libs/EffekSeer4J-1.0-SNAPSHOT.jar')
+    //extraLibs files('libs/EffekSeer4J-1.0-SNAPSHOT.jar')
 
     configurations.compile.extendsFrom(configurations.extraLibs)
 
@@ -154,7 +154,6 @@ task uniformJar() {
         ArrayList<String> entries = new ArrayList<>()
         File tempMergingDir = new File(name + "-Uniform.jar-merging")
         print(project.buildDir.path + name + ".jar")
-        clone(new File("MEIFabric/build/libs/minecraft_effekseer_implementation-1.0-SNAPSHOT.jar"), tempMergingDir, entries)
         clone(new File("build/libs/MinecraftEffekseerImplementation.jar"), tempMergingDir, entries)
         File outputFile = new File("build/" + name + "Uniform.jar")
         outputFile.createNewFile()
